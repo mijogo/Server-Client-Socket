@@ -25,18 +25,7 @@ class ejecutarhiloS implements Runnable
 	   		MulticastSocket socket = null;
 			try {
 				socket = new MulticastSocket(port);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}	// crear socket de multicast!
-			// Registrarse en un grupo de Multicast 
-			try {
 				group = InetAddress.getByName("228.14.25.2");
-			} catch (UnknownHostException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			try {
 				socket.joinGroup(group);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
@@ -44,9 +33,11 @@ class ejecutarhiloS implements Runnable
 			}
 			while(true)
 			{
-				Console console = System.console();
-				console.printf("Envie un mensaje al grupo");
-				String dato = console.readLine();
+				//Console console = System.console();
+				//console.printf("Envie un mensaje al grupo");
+				System.out.println("Envie un mensaje al grupo");
+				//String dato = console.readLine();
+				BufferedReader brc = new BufferedReader(new InputStreamReader(System.in));
 				Calendar fecha = new GregorianCalendar();
 				int ano = fecha.get(Calendar.YEAR);
 				int mes = fecha.get(Calendar.MONTH);
@@ -55,7 +46,13 @@ class ejecutarhiloS implements Runnable
 				int minuto = fecha.get(Calendar.MINUTE);
 				int segundo = fecha.get(Calendar.SECOND);
 				String Fechaexacta = dia + "/" + (mes+1) + "/" + ano + " " + hora+ ":" +minuto+ ":" +segundo;
-				String mensajeC = "["+contador+"] ("+Fechaexacta+"):"+dato;
+				String mensajeC = null;
+				try {
+					mensajeC = "["+contador+"] ("+Fechaexacta+"):"+brc.readLine();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 				byte[] buf = mensajeC.getBytes();
 		 		DatagramPacket dg = new DatagramPacket(buf, buf.length,group,port);
 				try {
@@ -91,24 +88,13 @@ class ejecutarhiloS implements Runnable
         		Socket sock = null;
 			try 
 			{
-            			sersock = new ServerSocket(uniport);
-            			for (;;) 
+				sersock = new ServerSocket(uniport);
+            	for (;;) 
 				{
 					sock = sersock.accept();
-                			BufferedReader is = new BufferedReader(new InputStreamReader(sock.getInputStream()));
-                			
-					int envio_port = 10325;
-					ServerSocket envio_sersock = null;
-        				Socket envio_sock = null;
-					envio_sersock = new ServerSocket(envio_port);
-
-					PrintStream ios = new PrintStream(sock.getOutputStream());
-                			ios.println(envio_port);
-                			ios.close();
-					envio_sock = envio_sersock.accept();
-					BufferedReader envio_is = new BufferedReader(new InputStreamReader(envio_sock.getInputStream()));
-					PrintStream envio_ios = new PrintStream(envio_sock.getOutputStream());
-                			
+                	BufferedReader is = new BufferedReader(new InputStreamReader(sock.getInputStream()));
+                	PrintStream ios = new PrintStream(sock.getOutputStream());
+                	ios.println("aceptado");
 					File archivo = null;
 					FileReader fr = null;
 					BufferedReader br = null;
@@ -121,19 +107,20 @@ class ejecutarhiloS implements Runnable
 						String linea;
 						while((linea=br.readLine())!=null)
 						{
-							envio_ios.println(linea);
+							ios.println(linea);
 						}
 						fr.close(); 
 					}
-					envio_ios.println("Fin");
+					ios.println("Fin");
+                	ios.close();
 					sock.close();
-            			}
-       			} catch (SocketException se) {
-            			System.out.println("Problemas con socket del servidor " + se.getMessage());
-        		} catch (Exception e) {
-           			 System.out.println("No pudo arrancar " + e.getMessage());
-        		}
-        		System.out.println(" Conexion desde :  " + sock.getInetAddress());
+            	}
+       		} catch (SocketException se) {
+       			System.out.println("Problemas con socket del servidor " + se.getMessage());
+        	} catch (Exception e) {
+           		System.out.println("No pudo arrancar " + e.getMessage());
+        	}
+        	System.out.println(" Conexion desde :  " + sock.getInetAddress());
 		}
    	}
    
