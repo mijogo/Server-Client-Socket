@@ -17,9 +17,15 @@ class ejecutarhilo implements Runnable
 	{
 		if(threadName == "hilo1")
 		{
-			Console console = System.console();
-        		console.printf("Que accion desea realizar");
-        		String dato = console.readLine();
+			System.out.println("Que accion desea realizar");
+			BufferedReader brc = new BufferedReader(new InputStreamReader(System.in));
+        	String dato = null;
+			try {
+				dato = brc.readLine();
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
 			if(dato == "Join")
 			{
 				notify();
@@ -34,20 +40,11 @@ class ejecutarhilo implements Runnable
 					ps= new PrintStream(sock.getOutputStream());
 					ps.println("Recuperar");
 					BufferedReader is = new BufferedReader(new InputStreamReader(sock.getInputStream()));
-					
-					InetAddress rec_ip =InetAddress.getByName("localhost");
-					int rec_resver_port = Integer.parseInt(is.readLine());
-					Socket rec_sock= new Socket(rec_ip, rec_resver_port);
-					DataInputStream rec_dis=null; 
-					PrintStream rec_ps=null;
-					rec_ps= new PrintStream(rec_sock.getOutputStream());
-					rec_ps.println("recibir");
-					BufferedReader rec_is = new BufferedReader(new InputStreamReader(rec_sock.getInputStream()));
 					int contador_rec=0;
 					String men_rec;
 					do
 					{
-						men_rec = rec_is.readLine();
+						men_rec = is.readLine();
 						if(men_rec!="Fin")
 						{
 							FileWriter fichero = null;
@@ -59,7 +56,6 @@ class ejecutarhilo implements Runnable
 							fichero.close();
 						}
 					}while(men_rec!="Fin");
-			  		rec_sock.close();
 				}
 				catch(SocketException e)
 				{ 
@@ -83,12 +79,16 @@ class ejecutarhilo implements Runnable
 			}
 		}
 		else
-		{
-			try {
-				wait();
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+		{	
+			synchronized(hilo)
+			{
+				try {
+					
+					hilo.wait();
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 			int port = 12451;
 		   	InetAddress group;
