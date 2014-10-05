@@ -17,71 +17,78 @@ class ejecutarhilo implements Runnable
 	{
 		if(threadName == "hilo1")
 		{
-			System.out.println("de recepcion de paquetes iniciado\n");
-			System.out.println("Que accion desea realizar");
-			BufferedReader brc = new BufferedReader(new InputStreamReader(System.in));
-        	String dato = null;
-			try {
-				dato = brc.readLine();
-			} catch (IOException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
-			if(dato == "Join")
+			//Hilo unicast, este hilo se preocupa de que le envien los mensajes anteriores
+			//debe preguntar cada cierto tiempo al servidor por los archivos
+			while(true)
 			{
-				//notify();
-				Socket sock=null; 
-				DataInputStream dis=null; 
-				PrintStream ps=null;
-				try 
+				System.out.println("Que accion desea realizar");
+				BufferedReader brc = new BufferedReader(new InputStreamReader(System.in));
+	        	String dato = null;
+				try {
+					dato = brc.readLine();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				
+				if(dato == "Join")
 				{
-					int serverPORT = 9025;
-					InetAddress ip =InetAddress.getByName("localhost");
-					sock= new Socket(ip, serverPORT); 
-					ps= new PrintStream(sock.getOutputStream());
-					ps.println("Recuperar");
-					BufferedReader is = new BufferedReader(new InputStreamReader(sock.getInputStream()));
-					int contador_rec=0;
-					String men_rec;
-					do
+					//notify();
+					Socket sock=null; 
+					DataInputStream dis=null; 
+					PrintStream ps=null;
+					try 
 					{
-						men_rec = is.readLine();
-						if(men_rec!="Fin")
+						int serverPORT = 9025;
+						InetAddress ip =InetAddress.getByName("localhost");
+						sock= new Socket(ip, serverPORT); 
+						ps= new PrintStream(sock.getOutputStream());
+						ps.println("Recuperar");
+						BufferedReader is = new BufferedReader(new InputStreamReader(sock.getInputStream()));
+						int contador_rec=0;
+						String men_rec;
+						do
 						{
-							FileWriter fichero = null;
-							PrintWriter pw = null;
-							String Nombre_arch = "mensaje"+(contador_rec/20)+".txt";
-							fichero = new FileWriter(Nombre_arch,true);
-							pw = new PrintWriter(fichero);
-							pw.println(men_rec);
-							fichero.close();
-						}
-					}while(men_rec!="Fin");
-				}
-				catch(SocketException e)
-				{ 
-					System.out.println("SocketException " + e); 
-          			}
-				catch(IOException e)
-				{ 
-					System.out.println("IOException " + e);
-				} 
-				finally
-				{
-			  		try
-					{
-				  		sock.close(); 
-			 		} 
-					catch(IOException ie)
+							men_rec = is.readLine();
+							if(men_rec!="Fin")
+							{
+								FileWriter fichero = null;
+								PrintWriter pw = null;
+								String Nombre_arch = "mensaje"+(contador_rec/20)+".txt";
+								fichero = new FileWriter(Nombre_arch,true);
+								pw = new PrintWriter(fichero);
+								pw.println(men_rec);
+								fichero.close();
+							}
+						}while(men_rec!="Fin");
+					}
+					catch(SocketException e)
 					{ 
-						System.out.println("Error de cerrado :" + ie.getMessage()); 
+						//darle un sleep, para meterse de nuevo al bucle y pedir nuevamente conexion
+						System.out.println("SocketException " + e); 
+	          		}
+					catch(IOException e)
+					{ 
+						System.out.println("IOException " + e);
 					} 
+					finally
+					{
+				  		try
+						{
+					  		sock.close(); 
+				 		} 
+						catch(IOException ie)
+						{ 
+							System.out.println("Error de cerrado :" + ie.getMessage()); 
+						} 
+					}
 				}
+				else if(dato=="leave")
 			}
 		}
 		else
 		{	
-			System.out.println("Hilo Multicast iniciado\n");
+			//Hilo multicast, aca deberia haber algo que permita entrar y manejar al grupo
 			/*synchronized(hilo)
 			{
 				try {
@@ -96,15 +103,19 @@ class ejecutarhilo implements Runnable
 		   	InetAddress group;
 		   	MulticastSocket socket;
 		   	DatagramPacket datagram;
-			try {
+			try 
+			{
 				socket = new MulticastSocket(port);
 				group = InetAddress.getByName("228.14.25.2");
 				socket.joinGroup(group);
 				byte[] buffer = new byte[1000];
 				datagram = new DatagramPacket(buffer,buffer.length);
-				socket.receive(datagram);
-				String message = new String(datagram.getData());
-				System.out.println(message);
+				while(true)
+				{
+					socket.receive(datagram);
+					String message = new String(datagram.getData());
+					System.out.println(message);
+				}
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

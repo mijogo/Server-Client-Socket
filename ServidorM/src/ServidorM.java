@@ -20,8 +20,7 @@ class ejecutarhiloS implements Runnable
 	{
 		if(threadName == "hilo1")
 		{
-			System.out.println("Hilo de multicast iniciado");
-			
+			//ESte hilo debe enviar y guardar los mensajes
 			int port = 12451;
 	   		InetAddress group = null;
 	   		MulticastSocket socket = null;
@@ -85,7 +84,7 @@ class ejecutarhiloS implements Runnable
 		}
 		else
 		{
-			System.out.println("Hilo de peticion de ingreso iniciado");
+			//este hilo espera a que los clientes le envien pedidos del historial de mensajes
 			int uniport = 9025;
        			ServerSocket sersock = null;
         		Socket sock = null;
@@ -96,6 +95,8 @@ class ejecutarhiloS implements Runnable
 				{
 					sock = sersock.accept();
                 	BufferedReader is = new BufferedReader(new InputStreamReader(sock.getInputStream()));
+                	System.out.println("prueba de peticiones");
+                	System.out.println(is.readLine());
                 	PrintStream ios = new PrintStream(sock.getOutputStream());
                 	ios.println("aceptado");
 					File archivo = null;
