@@ -1,7 +1,7 @@
 import java.io.*;
 import java.net.*;
 import java.util.*;
-import java.io.Console;
+//import java.io.Console;
  
 class ejecutarhilo implements Runnable 
 {
@@ -17,6 +17,7 @@ class ejecutarhilo implements Runnable
 	{
 		if(threadName == "hilo1")
 		{
+			System.out.println("de recepcion de paquetes iniciado\n");
 			System.out.println("Que accion desea realizar");
 			BufferedReader brc = new BufferedReader(new InputStreamReader(System.in));
         	String dato = null;
@@ -28,7 +29,7 @@ class ejecutarhilo implements Runnable
 			}
 			if(dato == "Join")
 			{
-				notify();
+				//notify();
 				Socket sock=null; 
 				DataInputStream dis=null; 
 				PrintStream ps=null;
@@ -80,7 +81,8 @@ class ejecutarhilo implements Runnable
 		}
 		else
 		{	
-			synchronized(hilo)
+			System.out.println("Hilo Multicast iniciado\n");
+			/*synchronized(hilo)
 			{
 				try {
 					
@@ -89,7 +91,7 @@ class ejecutarhilo implements Runnable
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-			}
+			}*/
 			int port = 12451;
 		   	InetAddress group;
 		   	MulticastSocket socket;

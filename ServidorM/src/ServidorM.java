@@ -1,7 +1,7 @@
 import java.io.*;
 import java.net.*;
 import java.util.*;
-import java.io.Console;
+//import java.io.Console;
  
 class ejecutarhiloS implements Runnable 
 {
@@ -20,6 +20,8 @@ class ejecutarhiloS implements Runnable
 	{
 		if(threadName == "hilo1")
 		{
+			System.out.println("Hilo de multicast iniciado");
+			
 			int port = 12451;
 	   		InetAddress group = null;
 	   		MulticastSocket socket = null;
@@ -83,6 +85,7 @@ class ejecutarhiloS implements Runnable
 		}
 		else
 		{
+			System.out.println("Hilo de peticion de ingreso iniciado");
 			int uniport = 9025;
        			ServerSocket sersock = null;
         		Socket sock = null;
