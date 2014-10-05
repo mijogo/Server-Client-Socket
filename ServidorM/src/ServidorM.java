@@ -102,15 +102,17 @@ class ejecutarhiloS implements Runnable
 					File archivo = null;
 					FileReader fr = null;
 					BufferedReader br = null;
-					for(int j=0;j<contador/tamanioArch;j++)
+					for(int j=0;j<(contador/tamanioArch)+1;j++)
 					{
 						String Nombre_arch = "mensaje"+Integer.toString(j)+".txt";
+						System.out.println(Nombre_arch);
 						archivo = new File (Nombre_arch);
 						fr = new FileReader (archivo);
 						br = new BufferedReader(fr);
 						String linea;
 						while((linea=br.readLine())!=null)
 						{
+							System.out.println(linea);
 							ios.println(linea);
 						}
 						fr.close(); 

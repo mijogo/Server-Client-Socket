@@ -31,9 +31,10 @@ class ejecutarhilo implements Runnable
 					e1.printStackTrace();
 				}
 				
-				if(dato == "Join")
+				if(dato.equals("Join"))
 				{
 					//notify();
+					System.out.println(dato);
 					Socket sock=null; 
 					DataInputStream dis=null; 
 					PrintStream ps=null;
@@ -50,8 +51,9 @@ class ejecutarhilo implements Runnable
 						do
 						{
 							men_rec = is.readLine();
-							if(men_rec!="Fin")
+							if(!men_rec.equals("Fin"))
 							{
+								System.out.println(men_rec);
 								FileWriter fichero = null;
 								PrintWriter pw = null;
 								String Nombre_arch = "mensaje"+(contador_rec/20)+".txt";
@@ -60,7 +62,7 @@ class ejecutarhilo implements Runnable
 								pw.println(men_rec);
 								fichero.close();
 							}
-						}while(men_rec!="Fin");
+						}while(!men_rec.equals("Fin"));
 					}
 					catch(SocketException e)
 					{ 
@@ -83,7 +85,8 @@ class ejecutarhilo implements Runnable
 						} 
 					}
 				}
-				else if(dato=="leave")
+				//else if(dato=="leave")
+				//{}
 			}
 		}
 		else
