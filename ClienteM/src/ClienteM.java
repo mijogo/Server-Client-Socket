@@ -1,12 +1,14 @@
 import java.io.*;
 import java.net.*;
 import java.util.*;
+import java.util.concurrent.Semaphore;
 //import java.io.Console;
  
 class ejecutarhilo implements Runnable 
 {
 	private Thread hilo;
 	private String threadName;
+	private static Semaphore sema = new Semaphore(0);  //semaforo parte en cero para que el hilo2 no reciba nada hasta que el usuario decida que hacer.
    
    	public ejecutarhilo(String name)
 	{
@@ -18,10 +20,10 @@ class ejecutarhilo implements Runnable
 		if(threadName == "hilo1")
 		{
 			//Hilo unicast, este hilo se preocupa de que le envien los mensajes anteriores
-			//debe preguntar cada cierto tiempo al servidor por los archivos
-			while(true)
+			Boolean connected = false;
+			while(!connected)
 			{
-				System.out.println("Que accion desea realizar");
+				System.out.println("Ingrese \"Pull\" para recibir el historial al unirse o \"Join\" para solo unirse.");
 				BufferedReader brc = new BufferedReader(new InputStreamReader(System.in));
 	        	String dato = null;
 				try {
@@ -31,77 +33,103 @@ class ejecutarhilo implements Runnable
 					e1.printStackTrace();
 				}
 				
-				if(dato.equals("Join"))
+				if(dato.equals("Pull"))
 				{
-					//notify();
-					System.out.println(dato);
+					//System.out.println(dato);
 					Socket sock=null; 
 					DataInputStream dis=null; 
 					PrintStream ps=null;
-					try 
-					{
-						int serverPORT = 9025;
-						InetAddress ip =InetAddress.getByName("localhost");
-						sock= new Socket(ip, serverPORT); 
-						ps= new PrintStream(sock.getOutputStream());
-						ps.println("Recuperar");
-						BufferedReader is = new BufferedReader(new InputStreamReader(sock.getInputStream()));
-						int contador_rec=0;
-						String men_rec;
-						do
+					
+					while(!connected){
+						try 
 						{
-							men_rec = is.readLine();
-							if(!men_rec.equals("Fin"))
+							connected = true;
+							int serverPORT = 9025;
+							InetAddress ip =InetAddress.getByName("localhost");
+							sock= new Socket(ip, serverPORT); 
+							ps= new PrintStream(sock.getOutputStream());
+							ps.println("Recuperar");
+							BufferedReader is = new BufferedReader(new InputStreamReader(sock.getInputStream()));
+							int contador_rec=0;
+							String men_rec;
+							sema.release(); //dejamos que el otro hilo escuche y guarde momentaneamente los mensajes que puedan llegar mientras llega el historial.
+							do
 							{
-								System.out.println(men_rec);
-								FileWriter fichero = null;
-								PrintWriter pw = null;
-								String Nombre_arch = "mensaje"+(contador_rec/20)+".txt";
-								fichero = new FileWriter(Nombre_arch,true);
-								pw = new PrintWriter(fichero);
-								pw.println(men_rec);
-								fichero.close();
-							}
-						}while(!men_rec.equals("Fin"));
-					}
-					catch(SocketException e)
-					{ 
-						//darle un sleep, para meterse de nuevo al bucle y pedir nuevamente conexion
-						System.out.println("SocketException " + e); 
-	          		}
-					catch(IOException e)
-					{ 
-						System.out.println("IOException " + e);
-					} 
-					finally
-					{
-				  		try
-						{
-					  		sock.close(); 
-				 		} 
-						catch(IOException ie)
+								men_rec = is.readLine();
+								if(!men_rec.equals("Fin"))
+								{
+									System.out.println(men_rec);
+									FileWriter fichero = null;
+									PrintWriter pw = null;
+									String Nombre_arch = "mensaje"+(contador_rec/20)+".txt";
+									fichero = new FileWriter(Nombre_arch,true);
+									pw = new PrintWriter(fichero);
+									pw.println(men_rec);
+									fichero.close();
+								}
+							}while(!men_rec.equals("Fin"));
+							sema.release();
+						}
+						catch(SocketException e)
 						{ 
-							System.out.println("Error de cerrado :" + ie.getMessage()); 
+							//darle un sleep, para meterse de nuevo al bucle y pedir nuevamente conexion
+							try {
+								Thread.sleep(1000);
+							} catch (InterruptedException e1) {
+								// TODO Auto-generated catch block
+								e1.printStackTrace();
+							}
+							connected = false;
+							System.out.println("SocketException " + e); 
+		          		}
+						catch(IOException e)
+						{ 
+							System.out.println("IOException " + e);
 						} 
+						finally
+						{
+					  		try
+							{
+						  		sock.close(); 
+					 		} 
+							catch(IOException ie)
+							{ 
+								System.out.println("Error de cerrado :" + ie.getMessage()); 
+							} 
+						}
 					}
 				}
-				//else if(dato=="leave")
+				else if(dato.equals("Join")){
+					connected = true;
+					sema.release();//doble release para que el otro hilo pase a mostrar los mensajes live.
+					sema.release();
+				}
 				//{}
+			}while(connected){
+				System.out.println("Ingrese \"Recover\" para reparar posibles mensajes perdidos o \"Leave\" para desconectarse.");
+				BufferedReader brc = new BufferedReader(new InputStreamReader(System.in));
+				String dato = null;
+				try {
+					dato = brc.readLine();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				if(dato.equals("Recover")){
+					//recuperacion de mensajes perdidos. --> pedir historial denuevo y comparar
+				}else if (dato.equals("Leave")){
+					//Desconectar
+				}
 			}
 		}
 		else
 		{	
-			//Hilo multicast, aca deberia haber algo que permita entrar y manejar al grupo
-			/*synchronized(hilo)
-			{
-				try {
-					
-					hilo.wait();
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}*/
+			try {
+				sema.acquire();   //Si se esta descargando el historial, empesamos a escuchar.
+			} catch (InterruptedException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
 			int port = 12451;
 		   	InetAddress group;
 		   	MulticastSocket socket;
@@ -114,10 +142,20 @@ class ejecutarhilo implements Runnable
 				byte[] buffer = new byte[1000];
 				datagram = new DatagramPacket(buffer,buffer.length);
 				while(true)
-				{
-					socket.receive(datagram);
-					String message = new String(datagram.getData());
-					System.out.println(message);
+				{	
+					if(sema.availablePermits()== 0){ //estamos aun descargando el historial, aqui el los mensajes deben ser guardados y mostrados cuando lleguen los permisos.
+						socket.receive(datagram);
+						String message = new String(datagram.getData());
+						System.out.println("mensaje pendiente" + message); //a la lista, no se deberia mostrar.
+					}else{
+						//si estamos con mas de cero permisos, mostramos directamente (primero los guardados).
+						//if(lista o archivo temporal de mensajes tiene mensajes pendientes)
+							//while(quedan mensajes)
+								//mostrar mensajes.
+						socket.receive(datagram);
+						String message = new String(datagram.getData());
+						System.out.println(message);
+					}
 				}
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
