@@ -1,6 +1,7 @@
 import java.io.*;
 import java.net.*;
 import java.util.*;
+import java.io.Serializable;
 //import java.io.Console;
  
 class ejecutarhiloS implements Runnable 
@@ -64,7 +65,7 @@ class ejecutarhiloS implements Runnable
 				}
 				FileWriter fichero = null;
 				PrintWriter pw = null;
-				String Nombre_arch = "mensaje"+(contador/tamanioArch)+".txt";
+				String Nombre_arch = "Historial.txt";
 				try {
 					fichero = new FileWriter(Nombre_arch,true);
 				} catch (IOException e) {
@@ -93,32 +94,26 @@ class ejecutarhiloS implements Runnable
 				sersock = new ServerSocket(uniport);
             	for (;;) 
 				{
-					sock = sersock.accept();
-                	BufferedReader is = new BufferedReader(new InputStreamReader(sock.getInputStream()));
-                	System.out.println("prueba de peticiones");
-                	System.out.println(is.readLine());
-                	PrintStream ios = new PrintStream(sock.getOutputStream());
+            		sock = sersock.accept();
+					BufferedReader is = new BufferedReader(new InputStreamReader(sock.getInputStream()));
+					System.out.println("prueba de peticiones");
+					//System.out.println(is.readLine());
+					PrintStream ios = new PrintStream(sock.getOutputStream());
                 	ios.println("aceptado");
-					File archivo = null;
-					FileReader fr = null;
-					BufferedReader br = null;
-					for(int j=0;j<(contador/tamanioArch)+1;j++)
-					{
-						String Nombre_arch = "mensaje"+Integer.toString(j)+".txt";
-						System.out.println(Nombre_arch);
-						archivo = new File (Nombre_arch);
-						fr = new FileReader (archivo);
-						br = new BufferedReader(fr);
-						String linea;
-						while((linea=br.readLine())!=null)
-						{
-							System.out.println(linea);
-							ios.println(linea);
-						}
-						fr.close(); 
-					}
-					ios.println("Fin");
-                	ios.close();
+                	sock.setSoLinger(true, 10);
+
+                	//boolean enviadoUltimo=false;
+                    FileInputStream fis = new FileInputStream("Historial.txt");
+                    ObjectOutputStream oos = new ObjectOutputStream(sock.getOutputStream());
+                    byte[] datosArchivos = new byte[LONGITUD_MAXIMA];
+                    int leidos = fis.read(datosArchivos);
+                    while (leidos > -1)
+                    {
+                    	oos.writeObject(datosArchivos);
+                     }
+                     oos.close();
+                     fis.close();
+
 					sock.close();
             	}
        		} catch (SocketException se) {
@@ -129,7 +124,7 @@ class ejecutarhiloS implements Runnable
         	System.out.println(" Conexion desde :  " + sock.getInetAddress());
 		}
    	}
-   
+	
    	public void start ()
    	{
          	hilo = new Thread (this, threadName);

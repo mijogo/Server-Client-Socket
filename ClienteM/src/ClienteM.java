@@ -2,6 +2,7 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 import java.util.concurrent.Semaphore;
+import java.io.Serializable;
 //import java.io.Console;
  
 class ejecutarhilo implements Runnable 
@@ -40,7 +41,8 @@ class ejecutarhilo implements Runnable
 					DataInputStream dis=null; 
 					PrintStream ps=null;
 					
-					while(!connected){
+					while(!connected)
+					{
 						try 
 						{
 							connected = true;
@@ -50,24 +52,19 @@ class ejecutarhilo implements Runnable
 							ps= new PrintStream(sock.getOutputStream());
 							ps.println("Recuperar");
 							BufferedReader is = new BufferedReader(new InputStreamReader(sock.getInputStream()));
-							int contador_rec=0;
-							String men_rec;
 							sema.release(); //dejamos que el otro hilo escuche y guarde momentaneamente los mensajes que puedan llegar mientras llega el historial.
-							do
-							{
-								men_rec = is.readLine();
-								if(!men_rec.equals("Fin"))
-								{
-									System.out.println(men_rec);
-									FileWriter fichero = null;
-									PrintWriter pw = null;
-									String Nombre_arch = "mensaje"+(contador_rec/20)+".txt";
-									fichero = new FileWriter(Nombre_arch,true);
-									pw = new PrintWriter(fichero);
-									pw.println(men_rec);
-									fichero.close();
-								}
-							}while(!men_rec.equals("Fin"));
+
+				            FileOutputStream fos = new FileOutputStream("Historial_temp.txt");
+				            ObjectInputStream ois = new ObjectInputStream(sock.getInputStream());
+				            Object mensajeAux;
+				            do
+				            {
+				            	mensajeAux = ois.readObject();
+				            	fos.write(mensajeAux, 0,cant_bytes);
+				            } while (!mensajeRecibido.ultimoMensaje);
+				            fos.close();
+				            ois.close();
+							
 							sema.release();
 						}
 						catch(SocketException e)
@@ -86,6 +83,11 @@ class ejecutarhilo implements Runnable
 						{ 
 							System.out.println("IOException " + e);
 						} 
+						catch (ClassNotFoundException e) 
+						{
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
 						finally
 						{
 					  		try
@@ -105,7 +107,9 @@ class ejecutarhilo implements Runnable
 					sema.release();
 				}
 				//{}
-			}while(connected){
+			}
+			while(connected)
+			{
 				System.out.println("Ingrese \"Recover\" para reparar posibles mensajes perdidos o \"Leave\" para desconectarse.");
 				BufferedReader brc = new BufferedReader(new InputStreamReader(System.in));
 				String dato = null;
@@ -163,6 +167,7 @@ class ejecutarhilo implements Runnable
 			}
 		}
    	}
+	
    
    	public void start ()
    	{
@@ -170,6 +175,7 @@ class ejecutarhilo implements Runnable
    		hilo.start ();
    	}
 }
+
 
 public class ClienteM
 {
