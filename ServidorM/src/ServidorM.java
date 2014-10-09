@@ -9,11 +9,11 @@ class ejecutarhiloS implements Runnable
 	private Thread hilo;
 	private String threadName;
 	private int contador; 
-   	private int tamanioArch;
+   	private int tamanioMensaje;
    	public ejecutarhiloS(String name)
 	{
      		threadName = name;
-     		tamanioArch = 20;
+     		tamanioMensaje = 20;
      		contador = 0;
    	}
    
@@ -99,20 +99,23 @@ class ejecutarhiloS implements Runnable
 					System.out.println("prueba de peticiones");
 					//System.out.println(is.readLine());
 					PrintStream ios = new PrintStream(sock.getOutputStream());
-                	ios.println("aceptado");
-                	sock.setSoLinger(true, 10);
 
                 	//boolean enviadoUltimo=false;
                     FileInputStream fis = new FileInputStream("Historial.txt");
+                    int tamanio_arch = fis.available();
+                	ios.println(tamanioMensaje);
+                	ios.println(tamanio_arch);
+                	sock.setSoLinger(true, 10);
                     ObjectOutputStream oos = new ObjectOutputStream(sock.getOutputStream());
-                    byte[] datosArchivos = new byte[LONGITUD_MAXIMA];
+                    byte[] datosArchivos = new byte[tamanioMensaje];
                     int leidos = fis.read(datosArchivos);
                     while (leidos > -1)
                     {
                     	oos.writeObject(datosArchivos);
-                     }
-                     oos.close();
-                     fis.close();
+                        leidos = fis.read(datosArchivos);
+                    }
+                    oos.close();
+                    fis.close();
 
 					sock.close();
             	}
