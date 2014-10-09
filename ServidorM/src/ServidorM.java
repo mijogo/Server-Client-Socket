@@ -107,12 +107,15 @@ class ejecutarhiloS implements Runnable
                 	ios.println(tamanio_arch);
                 	sock.setSoLinger(true, 10);
                     ObjectOutputStream oos = new ObjectOutputStream(sock.getOutputStream());
-                    byte[] datosArchivos = new byte[tamanioMensaje];
-                    int leidos = fis.read(datosArchivos);
+                    //byte[] datosArchivos = new byte[tamanioMensaje];
+                    Mensaje datosArchivos = new Mensaje(tamanioMensaje);
+                    int leidos = fis.read(datosArchivos.contenidoMensaje);
                     while (leidos > -1)
                     {
                     	oos.writeObject(datosArchivos);
-                        leidos = fis.read(datosArchivos);
+                    	datosArchivos = new Mensaje(tamanioMensaje);
+                        leidos = fis.read(datosArchivos.contenidoMensaje);
+                        System.out.println(leidos);
                     }
                     oos.close();
                     fis.close();
@@ -134,6 +137,19 @@ class ejecutarhiloS implements Runnable
          	hilo.start ();
       	}
 }
+
+@SuppressWarnings("serial")
+class Mensaje implements Serializable
+{
+    private int Tamanio_mensaje;
+	public byte[] contenidoMensaje;
+	public Mensaje(int tam)
+	{
+		this.Tamanio_mensaje = tam;
+		contenidoMensaje = new byte[Tamanio_mensaje];
+	}
+}
+
 
 public class ServidorM
 {

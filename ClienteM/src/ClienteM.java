@@ -56,25 +56,26 @@ class ejecutarhilo implements Runnable
 							BufferedReader is = new BufferedReader(new InputStreamReader(sock.getInputStream()));
 							String dato_archivo = is.readLine();
 							cant_bytes = Integer.parseInt(dato_archivo);
-							System.out.println(cant_bytes);
+							//System.out.println(cant_bytes);
 							is = new BufferedReader(new InputStreamReader(sock.getInputStream()));
 							dato_archivo = is.readLine();
 							tam_archivo = Integer.parseInt(dato_archivo);
-							System.out.println(tam_archivo);
+							//System.out.println(tam_archivo);
 							sema.release(); //dejamos que el otro hilo escuche y guarde momentaneamente los mensajes que puedan llegar mientras llega el historial.
 							 
 				            FileOutputStream fos = new FileOutputStream("Historial_temp.txt");
 				            ObjectInputStream ois = new ObjectInputStream(sock.getInputStream());
 				            Object mensajeAux;
+				            Mensaje recibir_obj = new Mensaje(cant_bytes);
 				            for(int i =tam_archivo;i>-1;i-=cant_bytes)
 				            {
 				            	mensajeAux = ois.readObject();
+				            	recibir_obj = (Mensaje) mensajeAux;
 				            	if(cant_bytes<i)
-				            		fos.write(serialize(mensajeAux), 0,cant_bytes);
+				            		fos.write(recibir_obj.contenidoMensaje, 0,cant_bytes);
 				            	else
-				            		fos.write(serialize(mensajeAux), 0,i);
-				            	
-				            		
+				            		fos.write(recibir_obj.contenidoMensaje, 0,i);
+				            	System.out.println(i);
 				            }
 				            fos.close();
 				            ois.close();
@@ -181,13 +182,6 @@ class ejecutarhilo implements Runnable
 			}
 		}
    	}
-	
-	public static byte[] serialize(Object obj) throws IOException {
-	    ByteArrayOutputStream out = new ByteArrayOutputStream();
-	    ObjectOutputStream os = new ObjectOutputStream(out);
-	    os.writeObject(obj);
-	    return out.toByteArray();
-	}
    
    	public void start ()
    	{
@@ -196,6 +190,17 @@ class ejecutarhilo implements Runnable
    	}
 }
 
+@SuppressWarnings("serial")
+class Mensaje implements Serializable
+{
+    private int Tamanio_mensaje;
+	public byte[] contenidoMensaje;
+	public Mensaje(int tam)
+	{
+		this.Tamanio_mensaje = tam;
+		contenidoMensaje = new byte[Tamanio_mensaje];
+	}
+}
 
 public class ClienteM
 {
