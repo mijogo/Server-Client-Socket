@@ -10,7 +10,7 @@ class ejecutarhiloS implements Runnable
 	private Thread hilo;
 	private String threadName;
 	private int contador; 
-   private int tamanioMensaje;
+	private int tamanioMensaje;
 	private static Semaphore sema = new Semaphore(1); 
    	public ejecutarhiloS(String name)
 	{
@@ -79,9 +79,8 @@ class ejecutarhiloS implements Runnable
 				FileWriter fichero = null;
 				PrintWriter pw = null;
 				try {
-					sema.acquire();   //Si se esta descargando el historial, empesamos a escuchar.
+					sema.acquire();
 				} catch (InterruptedException e1) {
-					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
 				String Nombre_arch = "Historial.txt";
@@ -122,12 +121,12 @@ class ejecutarhiloS implements Runnable
 					//AQUI, copiar archivo antes de enviarlo y enviar copia. o genera conflicto al mandar mensajes y enviar historial al mismo tiempo.
 					//-------------------------------------------------------------
                 	//boolean enviadoUltimo=false;
-                	try {
-							sema.acquire();   //Si se esta descargando el historial, empesamos a escuchar.
-						} catch (InterruptedException e1) {
-							// TODO Auto-generated catch block
+                	try 
+                	{
+                		sema.acquire();
+                	} catch (InterruptedException e1) {
 							e1.printStackTrace();
-						}
+					}
                     FileInputStream fis = new FileInputStream("Historial.txt");
                     int tamanio_arch = fis.available();
                 	ios.println(tamanioMensaje);
@@ -145,8 +144,7 @@ class ejecutarhiloS implements Runnable
                     }
                     oos.close();
                     fis.close();
-                  
-							sema.release();
+                    sema.release();
                     System.out.println("...Envio de historial terminado");
 					sock.close();
             	}
