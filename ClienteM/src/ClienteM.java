@@ -1,10 +1,8 @@
-//import java.awt.List;
 import java.io.*;
 import java.net.*;
 import java.util.*;
 import java.util.concurrent.Semaphore;
 import java.io.Serializable;
-//import java.io.Console;
  
 class ejecutarhilo implements Runnable 
 {
@@ -21,20 +19,21 @@ class ejecutarhilo implements Runnable
 	{
 		if(threadName == "hilo1")
 		{
-			//Hilo unicast, este hilo se preocupa de que le envien los mensajes anteriores
+			//Hilo unicast, este hilo se preocupa de que le envien los mensajes anteriores o recuperar los no recibidos
 			Boolean connected = false;
 			while(!connected)
 			{
+				//al inicial se le pedira que escoja entre entrar directamente al canal sin recibir los mensajes anteriores
+				//o recuperar los mensajes anteriores
 				System.out.println("Ingrese \"Pull\" para recibir el historial al unirse o \"Join\" para solo unirse.");
 				BufferedReader brc = new BufferedReader(new InputStreamReader(System.in));
 	        	String dato = null;
 				try {
 					dato = brc.readLine();
 				} catch (IOException e1) {
-					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
-				
+				//Se entra si se quieren recuperar los mensajes anteriroes
 				if(dato.equals("Pull"))
 				{
 					
@@ -43,6 +42,7 @@ class ejecutarhilo implements Runnable
 					{
 						try 
 						{
+							//Se conecta al server por un canal unicast
 							connected = true;
 							int serverPORT = 9025;
 							int cant_bytes;
@@ -55,7 +55,7 @@ class ejecutarhilo implements Runnable
 							dato_archivo = is.readLine();
 							tam_archivo = Integer.parseInt(dato_archivo);
 							sema.release(); //dejamos que el otro hilo escuche y guarde momentaneamente los mensajes que puedan llegar mientras llega el historial.
-							 
+							//Se crea un archivo y se rellena con los datos que envia el servidor
 				            FileOutputStream fos = new FileOutputStream("Historial_temp.txt");
 				            ObjectInputStream ois = new ObjectInputStream(sock.getInputStream());
 				            Object mensajeAux;
@@ -74,20 +74,15 @@ class ejecutarhilo implements Runnable
 				            System.out.println("Historial Recibido, mostrando...");
 				            fos.close();
 				            ois.close();
-							
-							
 						}
 						catch(SocketException e)
 						{ 
-							//darle un sleep, para meterse de nuevo al bucle y pedir nuevamente conexion
 							try {
 								Thread.sleep(1000);
 							} catch (InterruptedException e1) {
-								// TODO Auto-generated catch block
 								e1.printStackTrace();
 							}
 							connected = false;
-							System.out.println("SocketException " + e); 
 		          		}
 						catch(IOException e)
 						{ 
@@ -95,7 +90,6 @@ class ejecutarhilo implements Runnable
 						} 
 						catch (ClassNotFoundException e) 
 						{
-							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
 						finally
@@ -114,24 +108,23 @@ class ejecutarhilo implements Runnable
 				else if(dato.equals("Join")){
 					connected = true;
 					sema.release();//release para que el otro hilo pase a mostrar los mensajes live.
-					
 				}
-				//{}
 			}
 			while(connected)
 			{
 				sema.release();
+				//Aca ya esta funcionando todo y se le dan opciones extras mientras esta
+				//recibiendo los mensajes del multicast
 				System.out.println("Ingrese \"Recover\" para reparar posibles mensajes perdidos o \"Leave\" para desconectarse.");
 				BufferedReader brc = new BufferedReader(new InputStreamReader(System.in));
 				String dato = null;
 				try {
 					dato = brc.readLine();
 				} catch (IOException e1) {
-					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
 				if(dato.equals("Recover")){
-					//-----------------------
+					//Si faltan mensajes se pueden pedir con un Recover
 					Socket sock=null;
 					connected = false;
 					while(!connected)
@@ -150,7 +143,7 @@ class ejecutarhilo implements Runnable
 							dato_archivo = is.readLine();
 							tam_archivo = Integer.parseInt(dato_archivo);
 							sema.release(); //dejamos que el otro hilo escuche y guarde momentaneamente los mensajes que puedan llegar mientras llega el historial.
-							 
+							//Es similar a a recuperar el historial, le pide el historial al server, para comparar los mensajes que se tienen
 				            FileOutputStream fos = new FileOutputStream("Historial_temp2.txt");
 				            ObjectInputStream ois = new ObjectInputStream(sock.getInputStream());
 				            Object mensajeAux;
@@ -164,13 +157,10 @@ class ejecutarhilo implements Runnable
 				            		fos.write(recibir_obj.contenidoMensaje, 0,cant_bytes);
 				            	else
 				            		fos.write(recibir_obj.contenidoMensaje, 0,i);
-				            	//System.out.println(i);
 				            }
 				            System.out.println("Historial Recibido, Procesando...");
 				            fos.close();
 				            ois.close();
-							
-							
 						}
 						catch(SocketException e)
 						{ 
@@ -178,11 +168,9 @@ class ejecutarhilo implements Runnable
 							try {
 								Thread.sleep(1000);
 							} catch (InterruptedException e1) {
-								// TODO Auto-generated catch block
 								e1.printStackTrace();
 							}
 							connected = false;
-							System.out.println("SocketException " + e); 
 		          		}
 						catch(IOException e)
 						{ 
@@ -190,7 +178,6 @@ class ejecutarhilo implements Runnable
 						} 
 						catch (ClassNotFoundException e) 
 						{
-							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
 						finally
@@ -205,7 +192,7 @@ class ejecutarhilo implements Runnable
 							} 
 						}
 					}
-					//-----------------------
+					//Se cargan los mensajes que se pidieron al server
 					System.out.println("Los mensajes recuperados son los siguientes:");
 					FileInputStream fstream;
 					try {
@@ -246,19 +233,20 @@ class ejecutarhilo implements Runnable
 		}
 		else
 		{	
+			//Es el hilo que escucha los mensajes del multicast
 			int shownMessages = 0;
 			ArrayList<String> QueuedMessages = new ArrayList<String>();
 			
 			try {
 				sema.acquire();   //Si se esta descargando el historial, empesamos a escuchar.
 			} catch (InterruptedException e1) {
-				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
 			int port = 12451;
 		   	InetAddress group;
 		   	MulticastSocket socket;
 		   	DatagramPacket datagram;
+		   	//Se conecta y escucha los mensajes
 			try 
 			{
 				socket = new MulticastSocket(port);
@@ -307,7 +295,6 @@ class ejecutarhilo implements Runnable
 							File f = new File("Historial_temp.txt");
 							f.delete();
 						} catch (Exception e) {
-							// TODO: handle exception
 						}
 						while(!QueuedMessages.isEmpty()){
 							System.out.println(QueuedMessages.get(0));
@@ -371,6 +358,7 @@ class ejecutarhilo implements Runnable
    	}
 }
 
+//Se utiliza una clase que maneja mejor el envio de archivos tipo byte[]
 @SuppressWarnings("serial")
 class Mensaje implements Serializable
 {
@@ -387,6 +375,7 @@ public class ClienteM
 {
 	public static void main(String args[]) 
 	{
+		//Se crean y ejecutan los hilos
 		ejecutarhilo H1 = new ejecutarhilo("hilo1");
 		H1.start();
 		ejecutarhilo H2 = new ejecutarhilo("hilo2");
