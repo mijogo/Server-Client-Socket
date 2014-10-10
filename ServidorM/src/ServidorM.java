@@ -33,13 +33,19 @@ class ejecutarhiloS implements Runnable
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+			System.out.println("Listo para enviar mensajes, ingrese \"Exit\" para cerrar borrando el historial.");
+			String line = null;
+			byte[] buf = null;
 			while(true)
-			{
-				//Console console = System.console();
-				//console.printf("Envie un mensaje al grupo");
+			{	
 				System.out.println("Envie un mensaje al grupo");
-				//String dato = console.readLine();
 				BufferedReader brc = new BufferedReader(new InputStreamReader(System.in));
+				try {
+					line = brc.readLine();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 				Calendar fecha = new GregorianCalendar();
 				int ano = fecha.get(Calendar.YEAR);
 				int mes = fecha.get(Calendar.MONTH);
@@ -48,14 +54,19 @@ class ejecutarhiloS implements Runnable
 				int minuto = fecha.get(Calendar.MINUTE);
 				int segundo = fecha.get(Calendar.SECOND);
 				String Fechaexacta = dia + "/" + (mes+1) + "/" + ano + " " + hora+ ":" +minuto+ ":" +segundo;
-				String mensajeC = null;
-				try {
-					mensajeC = "["+contador+"] ("+Fechaexacta+"):"+brc.readLine();
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
+				String mensajeC = "["+contador+"] ("+Fechaexacta+"):";
+				if(line.equals("Exit")){
+					//Aqui se borra el historial y se cierra la aplicacion
+					File f = new File("Historial.txt");
+					f.delete();
+					socket.close();
+					System.exit(0);
+				}else{
+					//se agrega el input al timestamp.
+					mensajeC = mensajeC + line;
 				}
-				byte[] buf = mensajeC.getBytes();
+				buf = null;
+				buf = mensajeC.getBytes();
 		 		DatagramPacket dg = new DatagramPacket(buf, buf.length,group,port);
 				try {
 					socket.send(dg);
@@ -95,11 +106,12 @@ class ejecutarhiloS implements Runnable
             	for (;;) 
 				{
             		sock = sersock.accept();
-					BufferedReader is = new BufferedReader(new InputStreamReader(sock.getInputStream()));
-					System.out.println("prueba de peticiones");
+					//BufferedReader is = new BufferedReader(new InputStreamReader(sock.getInputStream()));
+					System.out.println("Enviando archivo a cliente...");
 					//System.out.println(is.readLine());
 					PrintStream ios = new PrintStream(sock.getOutputStream());
-
+					//AQUI, copiar archivo antes de enviarlo y enviar copia. o genera conflicto al mandar mensajes y enviar historial al mismo tiempo.
+					//-------------------------------------------------------------
                 	//boolean enviadoUltimo=false;
                     FileInputStream fis = new FileInputStream("Historial.txt");
                     int tamanio_arch = fis.available();
@@ -114,12 +126,11 @@ class ejecutarhiloS implements Runnable
                     {
                     	oos.writeObject(datosArchivos);
                     	datosArchivos = new Mensaje(tamanioMensaje);
-                        leidos = fis.read(datosArchivos.contenidoMensaje);
-                        System.out.println(leidos);
+                        leidos = fis.read(datosArchivos.contenidoMensaje);  
                     }
                     oos.close();
                     fis.close();
-
+                    System.out.println("...Envio de historial terminado");
 					sock.close();
             	}
        		} catch (SocketException se) {
